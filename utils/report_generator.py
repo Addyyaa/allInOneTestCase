@@ -13,7 +13,12 @@ class ReportGenerator:
     """测试报告生成器"""
 
     def __init__(
-        self, stats: Dict, global_stats: Dict, hostnames: List[str], total_cycles: int
+        self,
+        stats: Dict,
+        global_stats: Dict,
+        hostnames: List[str],
+        total_cycles: int,
+        test_type: str = None,
     ):
         """
         初始化报告生成器
@@ -23,11 +28,31 @@ class ReportGenerator:
             global_stats: 全局统计信息
             hostnames: 主机名列表
             total_cycles: 计划循环次数
+            test_type: 测试类型（"s3"或"reboot"），如果不指定则自动判断
         """
         self.stats = stats
         self.global_stats = global_stats
         self.hostnames = hostnames
         self.total_cycles = total_cycles
+        # 自动判断测试类型
+        if test_type is None:
+            # 通过检查调用栈来判断（简单方法：检查stats中是否有s3相关的信息）
+            import inspect
+
+            frame = inspect.currentframe()
+            try:
+                caller = frame.f_back
+                caller_name = caller.f_code.co_name if caller else ""
+                if "s3" in caller_name.lower() or any(
+                    "s3" in str(k).lower() for k in self.stats.keys()
+                ):
+                    self.test_type = "s3"
+                else:
+                    self.test_type = "reboot"
+            except:
+                self.test_type = "reboot"  # 默认
+        else:
+            self.test_type = test_type.lower()
         self.report_dir = "reports"
         if not os.path.exists(self.report_dir):
             os.makedirs(self.report_dir)
@@ -74,7 +99,7 @@ class ReportGenerator:
         """生成HTML报告"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         html_file = os.path.join(
-            self.report_dir, f"reboot_test_report_{timestamp}.html"
+            self.report_dir, f"{self.test_type}_test_report_{timestamp}.html"
         )
 
         # 计算汇总统计
@@ -88,13 +113,16 @@ class ReportGenerator:
             s["non_critical_unrecoverable_failures"] for s in self.stats.values()
         )
 
+        # 确定测试类型显示名称
+        test_type_display = "S3" if self.test_type == "s3" else "重启"
+
         # 生成HTML内容
         html_content = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>重启测试报告</title>
+    <title>{test_type_display}测试报告</title>
     <style>
         body {{
             font-family: Arial, sans-serif;
@@ -172,7 +200,7 @@ class ReportGenerator:
 </head>
 <body>
     <div class="container">
-        <h1>重启测试报告</h1>
+        <h1>{test_type_display}测试报告</h1>
         
         <div class="summary">
             <div class="summary-card">
@@ -275,7 +303,7 @@ class ReportGenerator:
             </tr>
         </table>
 
-        <h3>{hostname} 每次重启耗时详情</h3>
+        <h3>{hostname} 每次{test_type_display}耗时详情</h3>
         <table>
             <tr>
                 <th>循环次数</th>
@@ -331,7 +359,7 @@ class ReportGenerator:
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         excel_file = os.path.join(
-            self.report_dir, f"reboot_test_report_{timestamp}.xlsx"
+            self.report_dir, f"{self.test_type}_test_report_{timestamp}.xlsx"
         )
 
         wb = openpyxl.Workbook()
@@ -344,8 +372,11 @@ class ReportGenerator:
         )
         header_font = Font(bold=True, color="FFFFFF")
 
+        # 确定测试类型显示名称
+        test_type_display = "S3" if self.test_type == "s3" else "重启"
+
         # 汇总统计表
-        ws.append(["重启测试报告"])
+        ws.append([f"{test_type_display}测试报告"])
         ws.merge_cells("A1:E1")
         ws["A1"].font = Font(size=16, bold=True)
         ws["A1"].alignment = Alignment(horizontal="center")
@@ -399,7 +430,7 @@ class ReportGenerator:
             ws_detail.append(["失败平均耗时（秒）", f"{calc_stats['failed_avg']:.2f}"])
             ws_detail.append([])
 
-            # 每次重启耗时详情
+            # 每次S3/重启耗时详情
             ws_detail.append(["循环次数", "状态", "耗时（秒）", "时间戳", "备注"])
             header_row = ws_detail.max_row
             for col in range(1, 6):
