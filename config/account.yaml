@@ -1,0 +1,6 @@
+hosts: {"z": "172.30.195.79"}
+user: addy
+password: sf123123
+wait_time: 10
+reboot_time: 120
+total_cycles: 3
