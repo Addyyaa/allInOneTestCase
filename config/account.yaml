@@ -6,3 +6,6 @@ reboot_time: 120
 s3_timeout: 120
 total_cycles: 50
 s3_wait_time: 2
+s4_wait_time: 6 # 系统唤醒后等待6s确保SSH服务稳定、系统服务就绪
+s4_timeout: 120
+s4_wake_delay: 60 # 延迟唤醒时间

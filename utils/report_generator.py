@@ -114,7 +114,12 @@ class ReportGenerator:
         )
 
         # 确定测试类型显示名称
-        test_type_display = "S3" if self.test_type == "s3" else "重启"
+        if self.test_type == "s3":
+            test_type_display = "S3"
+        elif self.test_type == "s4":
+            test_type_display = "S4"
+        else:
+            test_type_display = "重启"
 
         # 生成HTML内容
         html_content = f"""<!DOCTYPE html>
@@ -373,7 +378,12 @@ class ReportGenerator:
         header_font = Font(bold=True, color="FFFFFF")
 
         # 确定测试类型显示名称
-        test_type_display = "S3" if self.test_type == "s3" else "重启"
+        if self.test_type == "s3":
+            test_type_display = "S3"
+        elif self.test_type == "s4":
+            test_type_display = "S4"
+        else:
+            test_type_display = "重启"
 
         # 汇总统计表
         ws.append([f"{test_type_display}测试报告"])
@@ -430,7 +440,7 @@ class ReportGenerator:
             ws_detail.append(["失败平均耗时（秒）", f"{calc_stats['failed_avg']:.2f}"])
             ws_detail.append([])
 
-            # 每次S3/重启耗时详情
+            # 每次操作耗时详情
             ws_detail.append(["循环次数", "状态", "耗时（秒）", "时间戳", "备注"])
             header_row = ws_detail.max_row
             for col in range(1, 6):
