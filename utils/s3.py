@@ -275,9 +275,6 @@ class S3Manager:
 
                 try:
                     # 尝试读取输出（可能为空，因为S3会立即挂起）
-                    stdout_output = (
-                        stdout.read().decode("utf-8", errors="ignore").strip()
-                    )
                     stderr_output = (
                         stderr.read().decode("utf-8", errors="ignore").strip()
                     )
@@ -355,7 +352,7 @@ class S3Manager:
             verification_results = []
 
             # 计算时间范围：如果提供了S3开始时间，只检查该时间之后的日志
-            # 否则检查最近30秒内的日志（避免检查到之前S3的记录）
+            # 否则检查最近3秒内的日志（避免检查到之前S3的记录）
             if s3_start_time:
                 # 将时间戳转换为适合journalctl的格式
                 if isinstance(s3_start_time, datetime):
@@ -365,12 +362,12 @@ class S3Manager:
                 time_filter = f"--since '{time_str}'"
                 time_desc = f"S3开始时间({time_str})之后"
             else:
-                # 默认只检查最近30秒内的日志（避免检查到之前S3的记录）
-                time_filter = "--since '30 seconds ago'"
-                time_desc = "最近30秒内"
+                # 默认只检查最近3秒内的日志（避免检查到之前S3的记录）
+                time_filter = "--since '3 seconds ago'"
+                time_desc = "最近3秒内"
 
             # 方法1: 检查dmesg日志中是否有suspend/resume记录
-            # 注意：为了避免检查到之前S3的记录，我们使用dmesg -T获取时间戳并进行过滤
+            # 注意：为了避免检查到之前S3的记录，使用dmesg -T获取时间戳并进行过滤
             try:
                 # 使用dmesg -T获取带时间戳的输出
                 # 先获取更多记录，然后根据时间戳过滤
@@ -398,11 +395,11 @@ class S3Manager:
                                         dmesg_time = datetime.strptime(
                                             timestamp_str, "%a %b %d %H:%M:%S %Y"
                                         )
-                                        # 只保留S3开始时间之后的记录（加上5秒容差，因为命令执行需要时间）
+                                        # 只保留S3开始时间之后的记录（加上2秒容差，因为命令执行需要时间）
                                         from datetime import timedelta
 
                                         if dmesg_time >= (
-                                            s3_start_time - timedelta(seconds=5)
+                                            s3_start_time - timedelta(seconds=2)
                                         ):
                                             recent_lines.append(line)
                                             self.logger.info(

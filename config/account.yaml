@@ -4,5 +4,5 @@ password: sf123123
 wait_time: 10
 reboot_time: 120
 s3_timeout: 120
-total_cycles: 3
+total_cycles: 50
 s3_wait_time: 2
