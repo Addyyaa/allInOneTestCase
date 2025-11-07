@@ -1,11 +1,10 @@
-hosts: {"z": "172.30.195.79"}
-user: addy
-password: sf123123
-wait_time: 10
-reboot_time: 120
-s3_timeout: 120
-total_cycles: 50
-s3_wait_time: 2
+hosts: {"z": "172.30.195.79"}  # z是主机名字，也可以用主机编号方便测试区分，后面的值是主机ip
+user: addy  # 测试机的登录账户
+password: sf123123  # 测试机的登录密码
+reboot_time: 120  # 重启的最大超时时间，如果超过这个时间还没进入系统则判定为异常，测试失败
+s3_timeout: 120 # 睡眠唤醒的最大超时时间，如果超过这个时间还没进入系统则判定为异常，测试失败
+total_cycles: 50  # 总的循环次数
+s3_wait_time: 2  # 唤醒后的等待时间
 s4_wait_time: 6 # 系统唤醒后等待6s确保SSH服务稳定、系统服务就绪
-s4_timeout: 120
+s4_timeout: 120  # 休眠唤醒的最大超时时间，如果超过这个时间还没进入系统则判定为异常，测试失败
 s4_wake_delay: 60 # 延迟唤醒时间
